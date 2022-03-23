@@ -1,0 +1,14 @@
+
+LDA F100H
+MVI C, 01H
+MVI B, 01H
+
+LOOP: SUB B
+    JZ END
+    INR B
+    INR B
+    INR C
+    JMP LOOP
+
+END: RST 1
+HLT

@@ -1,0 +1,15 @@
+
+MVI A, 00H
+CALL FUNC1
+RST 1
+HLT
+
+FUNC2:
+    INR A
+    INR A
+    RET
+
+FUNC1:
+    INR A
+    CALL FUNC2
+    RET

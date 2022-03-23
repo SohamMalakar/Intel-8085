@@ -214,9 +214,6 @@ class flag_reg
 
         parity = !(parity_count % 2);
 
-        cout << "\n" << parity_count << "\n";
-        cout << parity << "\n";
-
         value = sign << 7 | zero << 6 | aux_carry << 4 | parity << 2 | carry;
     }
 
@@ -341,6 +338,18 @@ void shell(reg &r, memory &mem)
     }
 }
 
+void sp_update(size_t &pc, stack<size_t> &sp)
+{
+    if (sp.empty())
+    {
+        cerr << "Stack underflow\n";
+        exit(1);
+    }
+
+    pc = sp.top() + 1;
+    sp.pop();
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2)
@@ -381,7 +390,7 @@ int main(int argc, char **argv)
     reg r;
     flag_reg f;
     size_t pc = 0;
-    stack<uint16_t> call_stack; // TODO: Implement this
+    stack<size_t> sp; // TODO: Implement this
 
     shell(r, mem); // For taking input
 
@@ -594,7 +603,7 @@ outer:
                     {
                         mem.set(stoi(token, nullptr, 16), r.get(get_reg_index('L')));
                         r.hl_update(mem);
-                        
+
                         mem.set(stoi(token, nullptr, 16) + 1, r.get(get_reg_index('H')));
                         r.hl_update(mem);
                     }
@@ -950,6 +959,100 @@ outer:
 
                     break;
                 }
+                else if (args[0] == "CALL")
+                {
+                    sp.push(pc);
+                    pc = labels[token];
+                    goto outer;
+                }
+                else if (args[0] == "CC")
+                {
+                    if (f.carry)
+                    {
+                        sp.push(pc);
+                        pc = labels[token];
+                        goto outer;
+                    }
+
+                    break;
+                }
+                else if (args[0] == "CNC")
+                {
+                    if (!f.carry)
+                    {
+                        sp.push(pc);
+                        pc = labels[token];
+                        goto outer;
+                    }
+
+                    break;
+                }
+                else if (args[0] == "CP")
+                {
+                    if (!f.sign)
+                    {
+                        sp.push(pc);
+                        pc = labels[token];
+                        goto outer;
+                    }
+
+                    break;
+                }
+                else if (args[0] == "CM")
+                {
+                    if (f.sign)
+                    {
+                        sp.push(pc);
+                        pc = labels[token];
+                        goto outer;
+                    }
+
+                    break;
+                }
+                else if (args[0] == "CZ")
+                {
+                    if (f.zero)
+                    {
+                        sp.push(pc);
+                        pc = labels[token];
+                        goto outer;
+                    }
+
+                    break;
+                }
+                else if (args[0] == "CNZ")
+                {
+                    if (!f.zero)
+                    {
+                        sp.push(pc);
+                        pc = labels[token];
+                        goto outer;
+                    }
+
+                    break;
+                }
+                else if (args[0] == "CPE")
+                {
+                    if (f.parity)
+                    {
+                        sp.push(pc);
+                        pc = labels[token];
+                        goto outer;
+                    }
+
+                    break;
+                }
+                else if (args[0] == "CPO")
+                {
+                    if (!f.parity)
+                    {
+                        sp.push(pc);
+                        pc = labels[token];
+                        goto outer;
+                    }
+
+                    break;
+                }
                 // logical instructions
                 else if (args[0] == "CMP")
                 {
@@ -1132,6 +1235,76 @@ outer:
                 temp = r.get(get_reg_index('E'));
                 r.set(get_reg_index('E'), r.get(get_reg_index('L')));
                 r.set(get_reg_index('L'), temp, mem);
+            }
+            // branching instructions
+            else if (args[0] == "RET")
+            {
+                sp_update(pc, sp);
+                goto outer;
+            }
+            else if (args[0] == "RC")
+            {
+                if (f.carry)
+                {
+                    sp_update(pc, sp);
+                    goto outer;
+                }
+            }
+            else if (args[0] == "RNC")
+            {
+                if (!f.carry)
+                {
+                    sp_update(pc, sp);
+                    goto outer;
+                }
+            }
+            else if (args[0] == "RP")
+            {
+                if (!f.sign)
+                {
+                    sp_update(pc, sp);
+                    goto outer;
+                }
+            }
+            else if (args[0] == "RM")
+            {
+                if (f.sign)
+                {
+                    sp_update(pc, sp);
+                    goto outer;
+                }
+            }
+            else if (args[0] == "RZ")
+            {
+                if (f.zero)
+                {
+                    sp_update(pc, sp);
+                    goto outer;
+                }
+            }
+            else if (args[0] == "RNZ")
+            {
+                if (!f.zero)
+                {
+                    sp_update(pc, sp);
+                    goto outer;
+                }
+            }
+            else if (args[0] == "RPE")
+            {
+                if (f.parity)
+                {
+                    sp_update(pc, sp);
+                    goto outer;
+                }
+            }
+            else if (args[0] == "RPO")
+            {
+                if (!f.parity)
+                {
+                    sp_update(pc, sp);
+                    goto outer;
+                }
             }
             // logical instructions
             else if (args[0] == "RLC")

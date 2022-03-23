@@ -1,0 +1,9 @@
+
+MVI A, 0AH
+CALL DEC
+HLT
+
+DEC:
+    DCR A
+    RZ
+    CALL DEC

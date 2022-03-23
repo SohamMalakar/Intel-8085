@@ -1,12 +1,12 @@
-# Intel 8085 Emulator
+## Intel 8085 Emulator
 
 It's an emulator of the Intel 8085 microprocessor written in C++.
 
-# Build from Source
+## Build from Source
 
 Run the following command to build the project:
 
-## GNU/Linux
+### GNU/Linux
 
 ```
 $ git clone https://github.com/SohamMalakar/Intel-8085.git
@@ -14,7 +14,7 @@ $ cd Intel-8085
 $ make
 ```
 
-# Samples
+## Samples
 
 There are some programs in the [samples](https://github.com/SohamMalakar/Intel-8085/tree/master/samples) directory written in Assembly language. You can run them by executing the following command:
 
@@ -22,11 +22,11 @@ There are some programs in the [samples](https://github.com/SohamMalakar/Intel-8
 $ ./asm samples/test.asm
 ```
 
-# License
+## License
 
 This project is licensed under the [MIT License](https://github.com/SohamMalakar/Intel-8085/blob/master/LICENSE).
 
-# Contributing
+## Contributing
 
 If you want to contribute to the project, please fork the repository and make a [pull request](https://github.com/SohamMalakar/Intel-8085/pulls).
 

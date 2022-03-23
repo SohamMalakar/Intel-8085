@@ -390,7 +390,7 @@ int main(int argc, char **argv)
     reg r;
     flag_reg f;
     size_t pc = 0;
-    stack<size_t> sp; // TODO: Implement this
+    stack<size_t> sp;
 
     shell(r, mem); // For taking input
 

@@ -624,15 +624,13 @@ outer:
                     string upr_token = token;
                     TOUPPER(upr_token);
 
-                    if (upr_token != "B" && upr_token != "D" && upr_token != "H")
+                    if (upr_token != "B" && upr_token != "D")
                     {
                         cerr << "Invalid register: " << token << "\n";
                         return 1;
                     }
 
-                    mem.set(r.get(get_reg_index(upr_token[0])) << 8 |
-                                r.get(get_reg_index(upr_token[0] == 'H' ? 'L' : upr_token[0] + 1)),
-                            r.get(0));
+                    mem.set(r.get(get_reg_index(upr_token[0])) << 8 | r.get(get_reg_index(upr_token[0] + 1)), r.get(0));
                     r.hl_update(mem);
                     break;
                 }

@@ -1,23 +1,18 @@
 // Divide two numbers
 
-MVI A, 00H
-MVI D, 00H
+LDA F100H // Divisor
+MOV B, A
 
-// Two numbers
-MVI B, 25H
-MVI C, 05H
+LDA F200H // Dividend
 
-JMP START
+MVI C, 00H // Clear quotient
 
-CON:
-    JNZ OUT
-    JZ IN
+LOOP:
+    CMP B // Compare result
+    JC END
 
-START:
-    ADD C
-    CMP B
-    JNC CON
-IN: INR D
-    JMP START
+    SUB B // Subtract divisor from dividend
+    INR C // Increment quotient
+    JMP LOOP
 
-OUT: HLT
+END: HLT

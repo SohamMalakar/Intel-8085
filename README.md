@@ -26,9 +26,9 @@ $ ./asm samples/test.asm
 
 I might add these features in the future:
 
-- **next** and **prev** commands to navigate through the memory
-- step by step execution
-- breakpoints
+- **next** and **prev** commands to navigate through the memory **(done)**
+- step by step execution **(done)**
+- breakpoints **(maybe)**
 - mnemonics to hexcode conversion
 - **bytes**, **m cycles** and **t states** of each instruction
 

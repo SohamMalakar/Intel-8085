@@ -7,3 +7,4 @@ DEC:
     DCR A
     RZ
     CALL DEC
+    RET

@@ -8,8 +8,16 @@ using namespace std;
 #define FLUSH cin.ignore(numeric_limits<streamsize>::max(), '\n');
 #define IS_REG(x) (regex_match(x, regex("[ABCDEHLMabcdehlm]{1}")))
 #define TOUPPER(x) transform(upr_token.begin(), upr_token.end(), upr_token.begin(), ::toupper);
+#define DEBUG                                                                                                          \
+    if (is_debug && regex_replace(lines[pc], regex(" "), "") != "")                                                    \
+    {                                                                                                                  \
+        cout << "Executed: " << lines[pc] << "\n";                                                                     \
+        shell(r, mem);                                                                                                 \
+    }
 
 map<uint16_t, uint8_t> modified_memory;
+bool is_debug = false;
+uint16_t cur_addr = 0;
 
 void print_memory()
 {
@@ -228,9 +236,6 @@ class flag_reg
 // For taking input
 void shell(reg &r, memory &mem)
 {
-    cout << "Program loaded!\n";
-    cout << "Type 'help' for help.\n";
-
     while (true)
     {
         string cmd;
@@ -250,6 +255,9 @@ void shell(reg &r, memory &mem)
             cout << "  getreg - get a register\n";
             cout << "  setmem - set a memory address\n";
             cout << "  getmem - get a memory address\n";
+            cout << "  next / n - set the next memory address\n";
+            cout << "  prev / p - set the previous memory address\n";
+            cout << "  step / s - execute one instruction\n";
             cout << "  exec - execute the program\n";
             cout << "  print - print registers and memory\n";
             cout << "  reset - reset the machine\n";
@@ -268,8 +276,20 @@ void shell(reg &r, memory &mem)
             r.print();
             print_memory();
         }
+        else if (cmd == "step" || cmd == "s")
+        {
+            is_debug = true;
+            break;
+        }
         else if (cmd == "exec")
         {
+            /* if (is_debug)
+            {
+                cout << "Already in debug mode!\n";
+                continue;
+            } */
+
+            is_debug = false;
             break;
         }
         else if (cmd == "clear" || cmd == "cls")
@@ -283,6 +303,9 @@ void shell(reg &r, memory &mem)
 
             cout << "Address: ";
             cin >> hex >> addr;
+
+            cur_addr = addr;
+
             cout << "Value: ";
             cin >> hex >> val;
 
@@ -301,6 +324,19 @@ void shell(reg &r, memory &mem)
             FLUSH
 
             cout << hex << addr << ": " << hex << (int)mem.get(addr) << "\n";
+        }
+        else if (cmd == "next" || cmd == "n" || cmd == "prev" || cmd == "p")
+        {
+            int val;
+
+            cout << "Address: " << hex << (cmd == "next" || cmd == "n" ? ++cur_addr : --cur_addr) << "\n";
+            cout << "Value: ";
+            cin >> hex >> val;
+
+            FLUSH
+
+            mem.set(cur_addr, val);
+            r.hl_update(mem);
         }
         else if (cmd == "setreg")
         {
@@ -391,6 +427,9 @@ int main(int argc, char **argv)
     flag_reg f;
     size_t pc = 0;
     stack<size_t> sp;
+
+    cout << "Program loaded!\n";
+    cout << "Type 'help' for help.\n";
 
     shell(r, mem); // For taking input
 
@@ -876,6 +915,7 @@ outer:
                 // branching instructions
                 else if (args[0] == "JMP")
                 {
+                    DEBUG
                     pc = labels[token];
                     goto outer;
                 }
@@ -883,6 +923,7 @@ outer:
                 {
                     if (f.carry)
                     {
+                        DEBUG
                         pc = labels[token];
                         goto outer;
                     }
@@ -893,6 +934,7 @@ outer:
                 {
                     if (!f.carry)
                     {
+                        DEBUG
                         pc = labels[token];
                         goto outer;
                     }
@@ -903,6 +945,7 @@ outer:
                 {
                     if (!f.sign)
                     {
+                        DEBUG
                         pc = labels[token];
                         goto outer;
                     }
@@ -913,6 +956,7 @@ outer:
                 {
                     if (f.sign)
                     {
+                        DEBUG
                         pc = labels[token];
                         goto outer;
                     }
@@ -923,6 +967,7 @@ outer:
                 {
                     if (f.zero)
                     {
+                        DEBUG
                         pc = labels[token];
                         goto outer;
                     }
@@ -933,6 +978,7 @@ outer:
                 {
                     if (!f.zero)
                     {
+                        DEBUG
                         pc = labels[token];
                         goto outer;
                     }
@@ -943,6 +989,7 @@ outer:
                 {
                     if (f.parity)
                     {
+                        DEBUG
                         pc = labels[token];
                         goto outer;
                     }
@@ -953,6 +1000,7 @@ outer:
                 {
                     if (!f.parity)
                     {
+                        DEBUG
                         pc = labels[token];
                         goto outer;
                     }
@@ -961,6 +1009,7 @@ outer:
                 }
                 else if (args[0] == "CALL")
                 {
+                    DEBUG
                     sp.push(pc);
                     pc = labels[token];
                     goto outer;
@@ -969,6 +1018,7 @@ outer:
                 {
                     if (f.carry)
                     {
+                        DEBUG
                         sp.push(pc);
                         pc = labels[token];
                         goto outer;
@@ -980,6 +1030,7 @@ outer:
                 {
                     if (!f.carry)
                     {
+                        DEBUG
                         sp.push(pc);
                         pc = labels[token];
                         goto outer;
@@ -991,6 +1042,7 @@ outer:
                 {
                     if (!f.sign)
                     {
+                        DEBUG
                         sp.push(pc);
                         pc = labels[token];
                         goto outer;
@@ -1002,6 +1054,7 @@ outer:
                 {
                     if (f.sign)
                     {
+                        DEBUG
                         sp.push(pc);
                         pc = labels[token];
                         goto outer;
@@ -1013,6 +1066,7 @@ outer:
                 {
                     if (f.zero)
                     {
+                        DEBUG
                         sp.push(pc);
                         pc = labels[token];
                         goto outer;
@@ -1024,6 +1078,7 @@ outer:
                 {
                     if (!f.zero)
                     {
+                        DEBUG
                         sp.push(pc);
                         pc = labels[token];
                         goto outer;
@@ -1035,6 +1090,7 @@ outer:
                 {
                     if (f.parity)
                     {
+                        DEBUG
                         sp.push(pc);
                         pc = labels[token];
                         goto outer;
@@ -1046,6 +1102,7 @@ outer:
                 {
                     if (!f.parity)
                     {
+                        DEBUG
                         sp.push(pc);
                         pc = labels[token];
                         goto outer;
@@ -1239,6 +1296,7 @@ outer:
             // branching instructions
             else if (args[0] == "RET")
             {
+                DEBUG
                 sp_update(pc, sp);
                 goto outer;
             }
@@ -1246,6 +1304,7 @@ outer:
             {
                 if (f.carry)
                 {
+                    DEBUG
                     sp_update(pc, sp);
                     goto outer;
                 }
@@ -1254,6 +1313,7 @@ outer:
             {
                 if (!f.carry)
                 {
+                    DEBUG
                     sp_update(pc, sp);
                     goto outer;
                 }
@@ -1262,6 +1322,7 @@ outer:
             {
                 if (!f.sign)
                 {
+                    DEBUG
                     sp_update(pc, sp);
                     goto outer;
                 }
@@ -1270,6 +1331,7 @@ outer:
             {
                 if (f.sign)
                 {
+                    DEBUG
                     sp_update(pc, sp);
                     goto outer;
                 }
@@ -1278,6 +1340,7 @@ outer:
             {
                 if (f.zero)
                 {
+                    DEBUG
                     sp_update(pc, sp);
                     goto outer;
                 }
@@ -1286,6 +1349,7 @@ outer:
             {
                 if (!f.zero)
                 {
+                    DEBUG
                     sp_update(pc, sp);
                     goto outer;
                 }
@@ -1294,6 +1358,7 @@ outer:
             {
                 if (f.parity)
                 {
+                    DEBUG
                     sp_update(pc, sp);
                     goto outer;
                 }
@@ -1302,6 +1367,7 @@ outer:
             {
                 if (!f.parity)
                 {
+                    DEBUG
                     sp_update(pc, sp);
                     goto outer;
                 }
@@ -1350,9 +1416,14 @@ outer:
             }
             else if (args[0] == "HLT")
             {
+                if (is_debug)
+                    cout << "Executed: HLT\n";
+
                 break;
             }
         }
+
+        DEBUG
 
         pc++;
     }

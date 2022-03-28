@@ -22,6 +22,16 @@ There are some programs in the [samples](https://github.com/SohamMalakar/Intel-8
 $ ./asm samples/test.asm
 ```
 
+## TODO
+
+I might add these features in the future:
+
+- **next** and **prev** commands to navigate through the memory
+- step by step execution
+- breakpoints
+- mnemonics to hexcode conversion
+- **bytes**, **m cycles** and **t states** of each instruction
+
 ## License
 
 This project is licensed under the [MIT License](https://github.com/SohamMalakar/Intel-8085/blob/master/LICENSE).

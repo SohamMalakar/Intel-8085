@@ -450,6 +450,9 @@ int main(int argc, char **argv)
 
     regex instructions_regex(inst);
 
+    // t states
+    int clock_cycles = 0;
+
 outer:
     // For executing instructions
     while (pc < lines.size())
@@ -501,6 +504,7 @@ outer:
                     if (i == 2)
                     {
                         r.set(get_reg_index(args[1][0]), r.get(get_reg_index(args[2][0]), mem), mem);
+                        clock_cycles += args[1][0] != 'M' || args[2][0] != 'M' ? 4 : 7;
                         break;
                     }
                 }
@@ -518,6 +522,7 @@ outer:
                             return 1;
                         }
 
+                        clock_cycles += args[1][0] != 'M' ? 7 : 10;
                         break;
                     }
 
@@ -543,6 +548,7 @@ outer:
                         return 1;
                     }
 
+                    clock_cycles += 13;
                     break;
                 }
                 else if (args[0] == "LDAX")
@@ -557,6 +563,7 @@ outer:
                     }
 
                     r.set(0, mem.get(r.get(get_reg_index(token[0])) << 8 | r.get(get_reg_index(token[0] + 1))));
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "LXI")
@@ -575,6 +582,7 @@ outer:
                             return 1;
                         }
 
+                        clock_cycles += 10;
                         break;
                     }
 
@@ -603,6 +611,9 @@ outer:
                         cerr << "Invalid address: " << token << "\n";
                         return 1;
                     }
+
+                    clock_cycles += 16;
+                    break;
                 }
                 else if (args[0] == "STA")
                 {
@@ -617,6 +628,7 @@ outer:
                         return 1;
                     }
 
+                    clock_cycles += 13;
                     break;
                 }
                 else if (args[0] == "STAX")
@@ -632,6 +644,7 @@ outer:
 
                     mem.set(r.get(get_reg_index(upr_token[0])) << 8 | r.get(get_reg_index(upr_token[0] + 1)), r.get(0));
                     r.hl_update(mem);
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "SHLD")
@@ -650,6 +663,7 @@ outer:
                         return 1;
                     }
 
+                    clock_cycles += 16;
                     break;
                 }
                 // arithmetic instructions
@@ -670,6 +684,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, aux & 0x10);
+                    clock_cycles += args[1][0] != 'M' ? 4 : 7;
                     break;
                 }
                 else if (args[0] == "ADC")
@@ -689,6 +704,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, aux & 0x10);
+                    clock_cycles += args[1][0] != 'M' ? 4 : 7;
                     break;
                 }
                 else if (args[0] == "ADI")
@@ -709,6 +725,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, aux & 0x10);
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "ACI")
@@ -729,6 +746,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, aux & 0x10);
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "DAD")
@@ -752,6 +770,7 @@ outer:
                     r.set(get_reg_index('L'), result & 0xFF, mem);
 
                     f.carry = result & 0x10000;
+                    clock_cycles += 10;
                     break;
                 }
                 else if (args[0] == "SUB")
@@ -771,6 +790,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, aux & 0x10);
+                    clock_cycles += args[1][0] != 'M' ? 4 : 7;
                     break;
                 }
                 else if (args[0] == "SBB")
@@ -791,6 +811,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, aux & 0x10);
+                    clock_cycles += args[1][0] != 'M' ? 4 : 7;
                     break;
                 }
                 else if (args[0] == "SUI")
@@ -811,6 +832,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, aux & 0x10);
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "SBI")
@@ -832,6 +854,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, aux & 0x10);
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "INR")
@@ -852,6 +875,7 @@ outer:
 
                     r.set(get_reg_index(args[1][0]), result, mem);
                     f.scan(result, aux & 0x10, false);
+                    clock_cycles += args[1][0] != 'M' ? 4 : 10;
                     break;
                 }
                 else if (args[0] == "INX")
@@ -870,6 +894,7 @@ outer:
                     r.set(get_reg_index(upr_token[0] == 'H' ? 'L' : upr_token[0] + 1), result & 0xFF, mem);
                     result = r.get(get_reg_index(upr_token[0])) + carry;
                     r.set(get_reg_index(upr_token[0]), result & 0xFF, mem);
+                    clock_cycles += 6;
                     break;
                 }
                 else if (args[0] == "DCR")
@@ -890,6 +915,7 @@ outer:
 
                     r.set(get_reg_index(args[1][0]), result, mem);
                     f.scan(result, aux & 0x10, false);
+                    clock_cycles += args[1][0] != 'M' ? 4 : 10;
                     break;
                 }
                 else if (args[0] == "DCX")
@@ -908,6 +934,7 @@ outer:
                     r.set(get_reg_index(upr_token[0] == 'H' ? 'L' : upr_token[0] + 1), result & 0xFF, mem);
                     result = r.get(get_reg_index(upr_token[0])) - borrow;
                     r.set(get_reg_index(upr_token[0]), result & 0xFF, mem);
+                    clock_cycles += 6;
                     break;
                 }
                 // branching instructions
@@ -915,6 +942,7 @@ outer:
                 {
                     DEBUG
                     pc = labels[token];
+                    clock_cycles += 10;
                     goto outer;
                 }
                 else if (args[0] == "JC")
@@ -923,9 +951,11 @@ outer:
                     {
                         DEBUG
                         pc = labels[token];
+                        clock_cycles += 10;
                         goto outer;
                     }
 
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "JNC")
@@ -934,9 +964,11 @@ outer:
                     {
                         DEBUG
                         pc = labels[token];
+                        clock_cycles += 10;
                         goto outer;
                     }
 
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "JP")
@@ -945,9 +977,11 @@ outer:
                     {
                         DEBUG
                         pc = labels[token];
+                        clock_cycles += 10;
                         goto outer;
                     }
 
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "JM")
@@ -956,9 +990,11 @@ outer:
                     {
                         DEBUG
                         pc = labels[token];
+                        clock_cycles += 10;
                         goto outer;
                     }
 
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "JZ")
@@ -967,9 +1003,11 @@ outer:
                     {
                         DEBUG
                         pc = labels[token];
+                        clock_cycles += 10;
                         goto outer;
                     }
 
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "JNZ")
@@ -978,9 +1016,11 @@ outer:
                     {
                         DEBUG
                         pc = labels[token];
+                        clock_cycles += 10;
                         goto outer;
                     }
 
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "JPE")
@@ -989,9 +1029,11 @@ outer:
                     {
                         DEBUG
                         pc = labels[token];
+                        clock_cycles += 10;
                         goto outer;
                     }
 
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "JPO")
@@ -1000,9 +1042,11 @@ outer:
                     {
                         DEBUG
                         pc = labels[token];
+                        clock_cycles += 10;
                         goto outer;
                     }
 
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "CALL")
@@ -1010,6 +1054,7 @@ outer:
                     DEBUG
                     sp.push(pc);
                     pc = labels[token];
+                    clock_cycles += 18;
                     goto outer;
                 }
                 else if (args[0] == "CC")
@@ -1019,9 +1064,11 @@ outer:
                         DEBUG
                         sp.push(pc);
                         pc = labels[token];
+                        clock_cycles += 18;
                         goto outer;
                     }
 
+                    clock_cycles += 9;
                     break;
                 }
                 else if (args[0] == "CNC")
@@ -1031,9 +1078,11 @@ outer:
                         DEBUG
                         sp.push(pc);
                         pc = labels[token];
+                        clock_cycles += 18;
                         goto outer;
                     }
 
+                    clock_cycles += 9;
                     break;
                 }
                 else if (args[0] == "CP")
@@ -1043,9 +1092,11 @@ outer:
                         DEBUG
                         sp.push(pc);
                         pc = labels[token];
+                        clock_cycles += 18;
                         goto outer;
                     }
 
+                    clock_cycles += 9;
                     break;
                 }
                 else if (args[0] == "CM")
@@ -1055,9 +1106,11 @@ outer:
                         DEBUG
                         sp.push(pc);
                         pc = labels[token];
+                        clock_cycles += 18;
                         goto outer;
                     }
 
+                    clock_cycles += 9;
                     break;
                 }
                 else if (args[0] == "CZ")
@@ -1067,9 +1120,11 @@ outer:
                         DEBUG
                         sp.push(pc);
                         pc = labels[token];
+                        clock_cycles += 18;
                         goto outer;
                     }
 
+                    clock_cycles += 9;
                     break;
                 }
                 else if (args[0] == "CNZ")
@@ -1079,9 +1134,11 @@ outer:
                         DEBUG
                         sp.push(pc);
                         pc = labels[token];
+                        clock_cycles += 18;
                         goto outer;
                     }
 
+                    clock_cycles += 9;
                     break;
                 }
                 else if (args[0] == "CPE")
@@ -1091,9 +1148,11 @@ outer:
                         DEBUG
                         sp.push(pc);
                         pc = labels[token];
+                        clock_cycles += 18;
                         goto outer;
                     }
 
+                    clock_cycles += 9;
                     break;
                 }
                 else if (args[0] == "CPO")
@@ -1103,9 +1162,11 @@ outer:
                         DEBUG
                         sp.push(pc);
                         pc = labels[token];
+                        clock_cycles += 18;
                         goto outer;
                     }
 
+                    clock_cycles += 9;
                     break;
                 }
                 // logical instructions
@@ -1126,6 +1187,7 @@ outer:
 
                     f.carry = accumulator < operand;
                     f.zero = accumulator == operand;
+                    clock_cycles += args[1][0] != 'M' ? 4 : 7;
                     break;
                 }
                 else if (args[0] == "CPI")
@@ -1145,6 +1207,7 @@ outer:
 
                     f.carry = accumulator < operand;
                     f.zero = accumulator == operand;
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "ANA")
@@ -1165,6 +1228,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, true);
+                    clock_cycles += args[1][0] != 'M' ? 4 : 7;
                     break;
                 }
                 else if (args[0] == "ANI")
@@ -1186,6 +1250,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, true);
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "XRA")
@@ -1206,6 +1271,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, false);
+                    clock_cycles += args[1][0] != 'M' ? 4 : 7;
                     break;
                 }
                 else if (args[0] == "XRI")
@@ -1227,6 +1293,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, false);
+                    clock_cycles += 7;
                     break;
                 }
                 else if (args[0] == "ORA")
@@ -1247,6 +1314,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, false);
+                    clock_cycles += args[1][0] != 'M' ? 4 : 7;
                     break;
                 }
                 else if (args[0] == "ORI")
@@ -1268,6 +1336,7 @@ outer:
 
                     r.set(0, result);
                     f.scan(result, false);
+                    clock_cycles += 7;
                     break;
                 }
             }
@@ -1290,12 +1359,15 @@ outer:
                 temp = r.get(get_reg_index('E'));
                 r.set(get_reg_index('E'), r.get(get_reg_index('L')));
                 r.set(get_reg_index('L'), temp, mem);
+
+                clock_cycles += 4;
             }
             // branching instructions
             else if (args[0] == "RET")
             {
                 DEBUG
                 sp_update(pc, sp);
+                clock_cycles += 10;
                 goto outer;
             }
             else if (args[0] == "RC")
@@ -1304,8 +1376,11 @@ outer:
                 {
                     DEBUG
                     sp_update(pc, sp);
+                    clock_cycles += 12;
                     goto outer;
                 }
+                
+                clock_cycles += 6;
             }
             else if (args[0] == "RNC")
             {
@@ -1313,8 +1388,11 @@ outer:
                 {
                     DEBUG
                     sp_update(pc, sp);
+                    clock_cycles += 12;
                     goto outer;
                 }
+
+                clock_cycles += 6;
             }
             else if (args[0] == "RP")
             {
@@ -1322,8 +1400,11 @@ outer:
                 {
                     DEBUG
                     sp_update(pc, sp);
+                    clock_cycles += 12;
                     goto outer;
                 }
+
+                clock_cycles += 6;
             }
             else if (args[0] == "RM")
             {
@@ -1331,8 +1412,11 @@ outer:
                 {
                     DEBUG
                     sp_update(pc, sp);
+                    clock_cycles += 12;
                     goto outer;
                 }
+
+                clock_cycles += 6;
             }
             else if (args[0] == "RZ")
             {
@@ -1340,8 +1424,11 @@ outer:
                 {
                     DEBUG
                     sp_update(pc, sp);
+                    clock_cycles += 12;
                     goto outer;
                 }
+
+                clock_cycles += 6;
             }
             else if (args[0] == "RNZ")
             {
@@ -1349,8 +1436,11 @@ outer:
                 {
                     DEBUG
                     sp_update(pc, sp);
+                    clock_cycles += 12;
                     goto outer;
                 }
+
+                clock_cycles += 6;
             }
             else if (args[0] == "RPE")
             {
@@ -1358,8 +1448,11 @@ outer:
                 {
                     DEBUG
                     sp_update(pc, sp);
+                    clock_cycles += 12;
                     goto outer;
                 }
+
+                clock_cycles += 6;
             }
             else if (args[0] == "RPO")
             {
@@ -1367,8 +1460,11 @@ outer:
                 {
                     DEBUG
                     sp_update(pc, sp);
+                    clock_cycles += 12;
                     goto outer;
                 }
+
+                clock_cycles += 6;
             }
             // logical instructions
             else if (args[0] == "RLC")
@@ -1376,47 +1472,56 @@ outer:
                 uint8_t accumulator = r.get(0);
                 r.set(0, (accumulator << 1) | (accumulator >> 7));
                 f.carry = accumulator >> 7;
+                clock_cycles += 4;
             }
             else if (args[0] == "RRC")
             {
                 uint8_t accumulator = r.get(0);
                 r.set(0, (accumulator >> 1) | (accumulator << 7));
                 f.carry = accumulator & 1;
+                clock_cycles += 4;
             }
             else if (args[0] == "RAL")
             {
                 uint8_t accumulator = r.get(0);
                 r.set(0, (accumulator << 1) | f.carry);
                 f.carry = accumulator >> 7;
+                clock_cycles += 4;
             }
             else if (args[0] == "RAR")
             {
                 uint8_t accumulator = r.get(0);
                 r.set(0, (accumulator >> 1) | (f.carry << 7));
                 f.carry = accumulator & 1;
+                clock_cycles += 4;
             }
             else if (args[0] == "CMA")
             {
                 r.set(0, ~r.get(0));
+                clock_cycles += 4;
             }
             else if (args[0] == "CMC")
             {
                 f.carry = !f.carry;
+                clock_cycles += 4;
             }
             else if (args[0] == "STC")
             {
                 f.carry = true;
+                clock_cycles += 4;
             }
             // control instructions
             else if (args[0] == "NOP")
             {
                 // nothing to do
+                clock_cycles += 4;
             }
             else if (args[0] == "HLT")
             {
                 if (is_debug)
                     cout << "Executed: HLT\n";
 
+                clock_cycles += 5;
                 break;
             }
         }
@@ -1429,6 +1534,8 @@ outer:
     f.print();
     r.print();
     print_memory();
+
+    cout << "Clock cycles: " << dec << clock_cycles << "\n";
 
     return 0;
 }

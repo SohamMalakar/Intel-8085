@@ -1,0 +1,15 @@
+MVI H, 0AH
+
+LXI B, F100H
+LXI D, F200H
+
+LOOP:
+    LDAX B
+    STAX D
+    INX B
+    INX D
+    DCR H
+    JNZ LOOP
+
+RST 1
+HLT

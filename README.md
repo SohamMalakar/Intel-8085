@@ -30,7 +30,7 @@ I might add these features in the future:
 - step by step execution **(done)**
 - breakpoints **(maybe)**
 - mnemonics to hexcode conversion
-- **bytes**, **m cycles** and **t states** of each instruction
+- **bytes**, **m cycles** and **t states** of each instruction **(partially done)**
 
 ## License
 

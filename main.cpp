@@ -1379,7 +1379,7 @@ outer:
                     clock_cycles += 12;
                     goto outer;
                 }
-                
+
                 clock_cycles += 6;
             }
             else if (args[0] == "RNC")

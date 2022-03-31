@@ -1,0 +1,18 @@
+LDA F100h
+
+MOV D, A
+MVI B, 00h
+
+MVI A, 01h
+
+LOOP:
+    MOV E, B
+    MOV C, A
+    ADD B
+    MOV B, C
+    DCR D
+    JNZ LOOP
+
+MOV A, E
+STA F200h
+HLT

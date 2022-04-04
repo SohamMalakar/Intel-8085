@@ -18,6 +18,7 @@ using namespace std;
 map<uint16_t, uint8_t> modified_memory;
 bool is_debug = false;
 uint16_t cur_addr = 0;
+string opcodes = "";
 
 void print_memory()
 {
@@ -259,6 +260,7 @@ void shell(flag_reg &f, reg &r, memory &mem)
             cout << "  prev / p - set the previous memory address\n";
             cout << "  step / s - execute one instruction\n";
             cout << "  exec - execute the program\n";
+            cout << "  opcode - show the opcodes\n";
             cout << "  print - print registers and memory\n";
             cout << "  reset - reset the machine\n";
             cout << "  clear / cls - clears the console\n";
@@ -270,6 +272,11 @@ void shell(flag_reg &f, reg &r, memory &mem)
             mem.reset();
             modified_memory.clear();
             cout << "Reset!\n";
+        }
+        else if (cmd == "opcode")
+        {
+            cout << "Opcodes:\n";
+            cout << opcodes << "\n";
         }
         else if (cmd == "print")
         {
@@ -387,6 +394,24 @@ void sp_update(size_t &pc, stack<size_t> &sp)
     sp.pop();
 }
 
+int opcode_helper(char reg)
+{
+    reg = toupper(reg);
+
+    if (reg == 'B' || reg == 'C' || reg == 'D' || reg == 'E')
+        return reg - 'B';
+    else if (reg == 'H')
+        return 4;
+    else if (reg == 'L')
+        return 5;
+    else if (reg == 'M')
+        return 6;
+    else if (reg == 'A')
+        return 7;
+    else
+        return -1;
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2)
@@ -429,11 +454,6 @@ int main(int argc, char **argv)
     size_t pc = 0;
     stack<size_t> sp;
 
-    cout << "Program loaded!\n";
-    cout << "Type 'help' for help.\n";
-
-    shell(f, r, mem); // For taking input
-
     vector<string> instruction_set = {
         "MOV", "MVI",  "LDA", "LDAX", "LXI", "LHLD", "STA", "STAX", "SHLD", "XCHG", "SPHL", "XTHL", "PUSH", "POP",
         "OUT", "IN",   "ADD", "ADC",  "ADI", "ACI",  "DAD", "SUB",  "SBB",  "SUI",  "SBI",  "INR",  "INX",  "DCR",
@@ -454,11 +474,12 @@ int main(int argc, char **argv)
     // t states
     int clock_cycles = 0;
 
-outer:
-    // For executing instructions
-    while (pc < lines.size())
+    // opcodes in hex
+    stringstream opcodes_stream;
+
+    for (auto line : lines)
     {
-        string line = regex_replace(lines[pc], regex(","), " ");
+        line = regex_replace(line, regex(","), " ");
 
         stringstream ss;
         istringstream iss(line);
@@ -489,7 +510,6 @@ outer:
             }
             else
             {
-                // data transfer instructions
                 if (args[0] == "MOV")
                 {
                     if (IS_REG(token))
@@ -501,6 +521,628 @@ outer:
                         cerr << "Invalid register: " << token << "\n";
                         return 1;
                     }
+
+                    if (i == 2)
+                    {
+                        opcodes_stream << hex << 0x40 + 8 * opcode_helper(args[1][0]) + opcode_helper(args[2][0])
+                                       << " ";
+                        break;
+                    }
+                }
+                else if (args[0] == "MVI")
+                {
+                    if (i == 2)
+                    {
+                        opcodes_stream << hex << 0x06 + 8 * opcode_helper(args[1][0]) << " " << hex
+                                       << stoi(token, nullptr, 16) << " ";
+                        break;
+                    }
+
+                    if (IS_REG(token))
+                    {
+                        args[1] = token;
+                    }
+                    else
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+                }
+                else if (args[0] == "LDA")
+                {
+                    opcodes_stream << hex << 0x3a << " " << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
+                                   << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                    break;
+                }
+                else if (args[0] == "LDAX")
+                {
+                    string upr_token = token;
+                    TOUPPER(upr_token);
+
+                    if (upr_token != "B" && upr_token != "D")
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0x0a + 8 * (opcode_helper(upr_token[0]) - opcode_helper('B')) << " ";
+                    break;
+                }
+                else if (args[0] == "LXI")
+                {
+                    if (i == 2)
+                    {
+                        opcodes_stream << hex << 0x01 + 8 * (opcode_helper(args[1][0]) - opcode_helper('B')) << " "
+                                       << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
+                                       << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                        break;
+                    }
+
+                    string upr_token = token;
+                    TOUPPER(upr_token);
+
+                    if (upr_token == "B" || upr_token == "D" || upr_token == "H")
+                    {
+                        args[1] = upr_token;
+                    }
+                    else
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+                }
+                else if (args[0] == "LHLD")
+                {
+                    opcodes_stream << hex << 0x2a << " " << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
+                                   << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                    break;
+                }
+                else if (args[0] == "STA")
+                {
+                    opcodes_stream << hex << 0x32 << " " << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
+                                   << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                    break;
+                }
+                else if (args[0] == "STAX")
+                {
+                    string upr_token = token;
+                    TOUPPER(upr_token);
+
+                    if (upr_token != "B" && upr_token != "D")
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0x02 + 8 * (opcode_helper(upr_token[0]) - opcode_helper('B')) << " ";
+                    break;
+                }
+                else if (args[0] == "SHLD")
+                {
+                    opcodes_stream << hex << 0x22 << " " << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
+                                   << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                    break;
+                }
+                else if (args[0] == "ADD")
+                {
+                    if (IS_REG(token))
+                    {
+                        args[1] = token;
+                    }
+                    else
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0x80 + opcode_helper(args[1][0]) << " ";
+                    break;
+                }
+                else if (args[0] == "ADC")
+                {
+                    if (IS_REG(token))
+                    {
+                        args[1] = token;
+                    }
+                    else
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0x88 + opcode_helper(args[1][0]) << " ";
+                    break;
+                }
+                else if (args[0] == "ADI")
+                {
+                    opcodes_stream << hex << 0xc6 << " " << hex << stoi(token, nullptr, 16) << " ";
+                    break;
+                }
+                else if (args[0] == "ACI")
+                {
+                    opcodes_stream << hex << 0xce << " " << hex << stoi(token, nullptr, 16) << " ";
+                    break;
+                }
+                else if (args[0] == "DAD")
+                {
+                    string upr_token = token;
+                    TOUPPER(upr_token);
+
+                    if (upr_token != "B" && upr_token != "D" && upr_token != "H")
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0x09 + 8 * (opcode_helper(upr_token[0]) - opcode_helper('B')) << " ";
+                    break;
+                }
+                else if (args[0] == "SUB")
+                {
+                    if (IS_REG(token))
+                    {
+                        args[1] = token;
+                    }
+                    else
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0x90 + opcode_helper(args[1][0]) << " ";
+                    break;
+                }
+                else if (args[0] == "SBB")
+                {
+                    if (IS_REG(token))
+                    {
+                        args[1] = token;
+                    }
+                    else
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0x98 + opcode_helper(args[1][0]) << " ";
+                    break;
+                }
+                else if (args[0] == "SUI")
+                {
+                    opcodes_stream << hex << 0xd6 << " " << hex << stoi(token, nullptr, 16) << " ";
+                    break;
+                }
+                else if (args[0] == "SBI")
+                {
+                    opcodes_stream << hex << 0xde << " " << hex << stoi(token, nullptr, 16) << " ";
+                    break;
+                }
+                else if (args[0] == "INR")
+                {
+                    if (IS_REG(token))
+                    {
+                        args[1] = token;
+                    }
+                    else
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0x04 + 8 * opcode_helper(args[1][0]) << " ";
+                    break;
+                }
+                else if (args[0] == "INX")
+                {
+                    string upr_token = token;
+                    TOUPPER(upr_token);
+
+                    if (upr_token != "B" && upr_token != "D" && upr_token != "H")
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0x03 + 8 * (opcode_helper(upr_token[0]) - opcode_helper('B')) << " ";
+                    break;
+                }
+                else if (args[0] == "DCR")
+                {
+                    if (IS_REG(token))
+                    {
+                        args[1] = token;
+                    }
+                    else
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0x05 + 8 * opcode_helper(args[1][0]) << " ";
+                    break;
+                }
+                else if (args[0] == "DCX")
+                {
+                    string upr_token = token;
+                    TOUPPER(upr_token);
+
+                    if (upr_token != "B" && upr_token != "D" && upr_token != "H")
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0x0b + 8 * (opcode_helper(upr_token[0]) - opcode_helper('B')) << " ";
+                    break;
+                }
+                else if (args[0] == "JMP")
+                {
+                    opcodes_stream << hex << 0xc3 << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "JC")
+                {
+                    opcodes_stream << hex << 0xda << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "JNC")
+                {
+                    opcodes_stream << hex << 0xd2 << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "JP")
+                {
+                    opcodes_stream << hex << 0xf2 << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "JM")
+                {
+                    opcodes_stream << hex << 0xfa << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "JZ")
+                {
+                    opcodes_stream << hex << 0xca << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "JNZ")
+                {
+                    opcodes_stream << hex << 0xc2 << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "JPE")
+                {
+                    opcodes_stream << hex << 0xea << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "JPO")
+                {
+                    opcodes_stream << hex << 0xe2 << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "CALL")
+                {
+                    opcodes_stream << hex << 0xcd << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "CC")
+                {
+                    opcodes_stream << hex << 0xdc << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "CNC")
+                {
+                    opcodes_stream << hex << 0xd4 << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "CP")
+                {
+                    opcodes_stream << hex << 0xf4 << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "CM")
+                {
+                    opcodes_stream << hex << 0xfc << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "CZ")
+                {
+                    opcodes_stream << hex << 0xcc << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "CNZ")
+                {
+                    opcodes_stream << hex << 0xc4 << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "CPE")
+                {
+                    opcodes_stream << hex << 0xec << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "CPO")
+                {
+                    opcodes_stream << hex << 0xe4 << " "
+                                   << "xx"
+                                   << " "
+                                   << "xx"
+                                   << " ";
+                    break;
+                }
+                else if (args[0] == "CMP")
+                {
+                    if (IS_REG(token))
+                    {
+                        args[1] = token;
+                    }
+                    else
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0xb8 + opcode_helper(args[1][0]) << " ";
+                    break;
+                }
+                else if (args[0] == "CPI")
+                {
+                    opcodes_stream << hex << 0xfe << " " << hex << stoi(token, nullptr, 16) << " ";
+                    break;
+                }
+                else if (args[0] == "ANA")
+                {
+                    if (IS_REG(token))
+                    {
+                        args[1] = token;
+                    }
+                    else
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0xa0 + opcode_helper(args[1][0]) << " ";
+                    break;
+                }
+                else if (args[0] == "ANI")
+                {
+                    opcodes_stream << hex << 0xe6 << " " << hex << stoi(token, nullptr, 16) << " ";
+                    break;
+                }
+                else if (args[0] == "XRA")
+                {
+                    if (IS_REG(token))
+                    {
+                        args[1] = token;
+                    }
+                    else
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0xa8 + opcode_helper(args[1][0]) << " ";
+                    break;
+                }
+                else if (args[0] == "XRI")
+                {
+                    opcodes_stream << hex << 0xee << " " << hex << stoi(token, nullptr, 16) << " ";
+                    break;
+                }
+                else if (args[0] == "ORA")
+                {
+                    if (IS_REG(token))
+                    {
+                        args[1] = token;
+                    }
+                    else
+                    {
+                        cerr << "Invalid register: " << token << "\n";
+                        return 1;
+                    }
+
+                    opcodes_stream << hex << 0xb0 + opcode_helper(args[1][0]) << " ";
+                    break;
+                }
+                else if (args[0] == "ORI")
+                {
+                    opcodes_stream << hex << 0xf6 << " " << hex << stoi(token, nullptr, 16) << " ";
+                    break;
+                }
+            }
+
+            i++;
+        }
+
+        if (i != 0)
+        {
+            if (args[0] == "XCHG")
+            {
+                opcodes_stream << hex << 0xeb << " ";
+            }
+            else if (args[0] == "RET")
+            {
+                opcodes_stream << hex << 0xc9 << " ";
+            }
+            else if (args[0] == "RC")
+            {
+                opcodes_stream << hex << 0xd8 << " ";
+            }
+            else if (args[0] == "RNC")
+            {
+                opcodes_stream << hex << 0xd0 << " ";
+            }
+            else if (args[0] == "RP")
+            {
+                opcodes_stream << hex << 0xf0 << " ";
+            }
+            else if (args[0] == "RM")
+            {
+                opcodes_stream << hex << 0xf8 << " ";
+            }
+            else if (args[0] == "RZ")
+            {
+                opcodes_stream << hex << 0xc8 << " ";
+            }
+            else if (args[0] == "RNZ")
+            {
+                opcodes_stream << hex << 0xc0 << " ";
+            }
+            else if (args[0] == "RPE")
+            {
+                opcodes_stream << hex << 0xe8 << " ";
+            }
+            else if (args[0] == "RPO")
+            {
+                opcodes_stream << hex << 0xe0 << " ";
+            }
+            else if (args[0] == "RLC")
+            {
+                opcodes_stream << hex << 0x07 << " ";
+            }
+            else if (args[0] == "RRC")
+            {
+                opcodes_stream << hex << 0x0f << " ";
+            }
+            else if (args[0] == "RAL")
+            {
+                opcodes_stream << hex << 0x17 << " ";
+            }
+            else if (args[0] == "RAR")
+            {
+                opcodes_stream << hex << 0x1f << " ";
+            }
+            else if (args[0] == "CMA")
+            {
+                opcodes_stream << hex << 0x2f << " ";
+            }
+            else if (args[0] == "CMC")
+            {
+                opcodes_stream << hex << 0x3f << " ";
+            }
+            else if (args[0] == "STC")
+            {
+                opcodes_stream << hex << 0x37 << " ";
+            }
+            else if (args[0] == "NOP")
+            {
+                opcodes_stream << hex << 0x00 << " ";
+            }
+            else if (args[0] == "HLT")
+            {
+                opcodes_stream << hex << 0x76 << " ";
+            }
+        }
+    }
+
+    opcodes = opcodes_stream.str();
+
+    cout << "Program loaded!\n";
+    cout << "Type 'help' for help.\n";
+
+    shell(f, r, mem); // For taking input
+
+outer:
+    // For executing instructions
+    while (pc < lines.size())
+    {
+        string line = regex_replace(lines[pc], regex(","), " ");
+
+        stringstream ss;
+        istringstream iss(line);
+
+        copy(istream_iterator<string>(iss), istream_iterator<string>(), ostream_iterator<string>(ss, " "));
+
+        string token, args[3];
+
+        int i = 0;
+
+        while (getline(ss, token, ' '))
+        {
+            if (token.back() == ':')
+                continue;
+
+            if (i == 0)
+            {
+                string upr_token = token;
+                TOUPPER(upr_token);
+
+                args[0] = upr_token;
+            }
+            else
+            {
+                // data transfer instructions
+                if (args[0] == "MOV")
+                {
+                    args[i] = token;
 
                     if (i == 2)
                     {
@@ -527,15 +1169,7 @@ outer:
                         break;
                     }
 
-                    if (IS_REG(token))
-                    {
-                        args[1] = token;
-                    }
-                    else
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
+                    args[1] = token;
                 }
                 else if (args[0] == "LDA")
                 {
@@ -554,15 +1188,6 @@ outer:
                 }
                 else if (args[0] == "LDAX")
                 {
-                    string upr_token = token;
-                    TOUPPER(upr_token);
-
-                    if (upr_token != "B" && upr_token != "D")
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
-
                     r.set(0, mem.get(r.get(get_reg_index(token[0])) << 8 | r.get(get_reg_index(token[0] + 1))));
                     clock_cycles += 7;
                     break;
@@ -587,18 +1212,7 @@ outer:
                         break;
                     }
 
-                    string upr_token = token;
-                    TOUPPER(upr_token);
-
-                    if (upr_token == "B" || upr_token == "D" || upr_token == "H")
-                    {
-                        args[1] = upr_token;
-                    }
-                    else
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
+                    args[1] = token;
                 }
                 else if (args[0] == "LHLD")
                 {
@@ -634,16 +1248,7 @@ outer:
                 }
                 else if (args[0] == "STAX")
                 {
-                    string upr_token = token;
-                    TOUPPER(upr_token);
-
-                    if (upr_token != "B" && upr_token != "D")
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
-
-                    mem.set(r.get(get_reg_index(upr_token[0])) << 8 | r.get(get_reg_index(upr_token[0] + 1)), r.get(0));
+                    mem.set(r.get(get_reg_index(token[0])) << 8 | r.get(get_reg_index(token[0] + 1)), r.get(0));
                     r.hl_update(mem);
                     clock_cycles += 7;
                     break;
@@ -670,15 +1275,7 @@ outer:
                 // arithmetic instructions
                 else if (args[0] == "ADD")
                 {
-                    if (IS_REG(token))
-                    {
-                        args[1] = token;
-                    }
-                    else
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
+                    args[1] = token;
 
                     uint16_t result = r.get(0) + r.get(get_reg_index(args[1][0]), mem);
                     uint8_t aux = (r.get(0) & 0x0F) + (r.get(get_reg_index(args[1][0]), mem) & 0x0F);
@@ -690,15 +1287,7 @@ outer:
                 }
                 else if (args[0] == "ADC")
                 {
-                    if (IS_REG(token))
-                    {
-                        args[1] = token;
-                    }
-                    else
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
+                    args[1] = token;
 
                     uint16_t result = r.get(0) + r.get(get_reg_index(args[1][0]), mem) + f.carry;
                     uint8_t aux = (r.get(0) & 0x0F) + (r.get(get_reg_index(args[1][0]), mem) & 0x0F) + f.carry;
@@ -752,18 +1341,9 @@ outer:
                 }
                 else if (args[0] == "DAD")
                 {
-                    string upr_token = token;
-                    TOUPPER(upr_token);
-
-                    if (upr_token != "B" && upr_token != "D" && upr_token != "H")
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
-
                     uint32_t hl_pair = r.get(get_reg_index('H')) << 8 | r.get(get_reg_index('L'));
-                    uint32_t reg_pair = r.get(get_reg_index(upr_token[0])) << 8 |
-                                        r.get(get_reg_index(upr_token[0] == 'H' ? 'L' : upr_token[0] + 1));
+                    uint32_t reg_pair = r.get(get_reg_index(token[0])) << 8 |
+                                        r.get(get_reg_index(token[0] == 'H' ? 'L' : token[0] + 1));
 
                     uint32_t result = hl_pair + reg_pair;
 
@@ -776,15 +1356,7 @@ outer:
                 }
                 else if (args[0] == "SUB")
                 {
-                    if (IS_REG(token))
-                    {
-                        args[1] = token;
-                    }
-                    else
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
+                    args[1] = token;
 
                     uint16_t result = r.get(0) - r.get(get_reg_index(args[1][0]), mem);
                     uint8_t aux = (r.get(0) & 0x0F) + ((~r.get(get_reg_index(args[1][0]), mem) + 1) & 0x0F);
@@ -796,15 +1368,7 @@ outer:
                 }
                 else if (args[0] == "SBB")
                 {
-                    if (IS_REG(token))
-                    {
-                        args[1] = token;
-                    }
-                    else
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
+                    args[1] = token;
 
                     uint16_t result = r.get(0) - r.get(get_reg_index(args[1][0]), mem) - f.carry;
                     uint8_t aux = (r.get(0) & 0x0F) + ((~r.get(get_reg_index(args[1][0]), mem) + 1) & 0x0F) +
@@ -860,15 +1424,7 @@ outer:
                 }
                 else if (args[0] == "INR")
                 {
-                    if (IS_REG(token))
-                    {
-                        args[1] = token;
-                    }
-                    else
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
+                    args[1] = token;
 
                     // All flags, except Cy flag, are affected depending on the result thus produced.
                     uint16_t result = r.get(get_reg_index(args[1][0]), mem) + 1;
@@ -881,34 +1437,17 @@ outer:
                 }
                 else if (args[0] == "INX")
                 {
-                    string upr_token = token;
-                    TOUPPER(upr_token);
-
-                    if (upr_token != "B" && upr_token != "D" && upr_token != "H")
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
-
-                    uint16_t result = r.get(get_reg_index(upr_token[0] == 'H' ? 'L' : upr_token[0] + 1)) + 1;
+                    uint16_t result = r.get(get_reg_index(token[0] == 'H' ? 'L' : token[0] + 1)) + 1;
                     bool carry = result & 0xFF00;
-                    r.set(get_reg_index(upr_token[0] == 'H' ? 'L' : upr_token[0] + 1), result & 0xFF, mem);
-                    result = r.get(get_reg_index(upr_token[0])) + carry;
-                    r.set(get_reg_index(upr_token[0]), result & 0xFF, mem);
+                    r.set(get_reg_index(token[0] == 'H' ? 'L' : token[0] + 1), result & 0xFF, mem);
+                    result = r.get(get_reg_index(token[0])) + carry;
+                    r.set(get_reg_index(token[0]), result & 0xFF, mem);
                     clock_cycles += 6;
                     break;
                 }
                 else if (args[0] == "DCR")
                 {
-                    if (IS_REG(token))
-                    {
-                        args[1] = token;
-                    }
-                    else
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
+                    args[1] = token;
 
                     // All flags, except Cy flag, are affected depending on the result thus produced.
                     uint16_t result = r.get(get_reg_index(args[1][0]), mem) - 1;
@@ -921,20 +1460,11 @@ outer:
                 }
                 else if (args[0] == "DCX")
                 {
-                    string upr_token = token;
-                    TOUPPER(upr_token);
-
-                    if (upr_token != "B" && upr_token != "D" && upr_token != "H")
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
-
-                    uint16_t result = r.get(get_reg_index(upr_token[0] == 'H' ? 'L' : upr_token[0] + 1)) - 1;
+                    uint16_t result = r.get(get_reg_index(token[0] == 'H' ? 'L' : token[0] + 1)) - 1;
                     bool borrow = result & 0xFF00;
-                    r.set(get_reg_index(upr_token[0] == 'H' ? 'L' : upr_token[0] + 1), result & 0xFF, mem);
-                    result = r.get(get_reg_index(upr_token[0])) - borrow;
-                    r.set(get_reg_index(upr_token[0]), result & 0xFF, mem);
+                    r.set(get_reg_index(token[0] == 'H' ? 'L' : token[0] + 1), result & 0xFF, mem);
+                    result = r.get(get_reg_index(token[0])) - borrow;
+                    r.set(get_reg_index(token[0]), result & 0xFF, mem);
                     clock_cycles += 6;
                     break;
                 }
@@ -1173,15 +1703,7 @@ outer:
                 // logical instructions
                 else if (args[0] == "CMP")
                 {
-                    if (IS_REG(token))
-                    {
-                        args[1] = token;
-                    }
-                    else
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
+                    args[1] = token;
 
                     uint8_t accumulator = r.get(0);
                     uint8_t operand = r.get(get_reg_index(args[1][0]), mem);
@@ -1213,15 +1735,7 @@ outer:
                 }
                 else if (args[0] == "ANA")
                 {
-                    if (IS_REG(token))
-                    {
-                        args[1] = token;
-                    }
-                    else
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
+                    args[1] = token;
 
                     uint8_t accumulator = r.get(0);
                     uint8_t operand = r.get(get_reg_index(args[1][0]), mem);
@@ -1256,15 +1770,7 @@ outer:
                 }
                 else if (args[0] == "XRA")
                 {
-                    if (IS_REG(token))
-                    {
-                        args[1] = token;
-                    }
-                    else
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
+                    args[1] = token;
 
                     uint8_t accumulator = r.get(0);
                     uint8_t operand = r.get(get_reg_index(args[1][0]), mem);
@@ -1299,15 +1805,7 @@ outer:
                 }
                 else if (args[0] == "ORA")
                 {
-                    if (IS_REG(token))
-                    {
-                        args[1] = token;
-                    }
-                    else
-                    {
-                        cerr << "Invalid register: " << token << "\n";
-                        return 1;
-                    }
+                    args[1] = token;
 
                     uint8_t accumulator = r.get(0);
                     uint8_t operand = r.get(get_reg_index(args[1][0]), mem);

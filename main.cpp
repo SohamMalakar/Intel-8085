@@ -12,7 +12,7 @@ using namespace std;
     if (is_debug && regex_replace(lines[pc], regex(" "), "") != "")                                                    \
     {                                                                                                                  \
         cout << "Executed: " << lines[pc] << "\n";                                                                     \
-        shell(r, mem);                                                                                                 \
+        shell(f, r, mem);                                                                                              \
     }
 
 map<uint16_t, uint8_t> modified_memory;
@@ -234,7 +234,7 @@ class flag_reg
 };
 
 // For taking input
-void shell(reg &r, memory &mem)
+void shell(flag_reg &f, reg &r, memory &mem)
 {
     while (true)
     {
@@ -273,6 +273,7 @@ void shell(reg &r, memory &mem)
         }
         else if (cmd == "print")
         {
+            f.print();
             r.print();
             print_memory();
         }
@@ -431,7 +432,7 @@ int main(int argc, char **argv)
     cout << "Program loaded!\n";
     cout << "Type 'help' for help.\n";
 
-    shell(r, mem); // For taking input
+    shell(f, r, mem); // For taking input
 
     vector<string> instruction_set = {
         "MOV", "MVI",  "LDA", "LDAX", "LXI", "LHLD", "STA", "STAX", "SHLD", "XCHG", "SPHL", "XTHL", "PUSH", "POP",

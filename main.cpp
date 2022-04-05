@@ -533,8 +533,17 @@ int main(int argc, char **argv)
                 {
                     if (i == 2)
                     {
-                        opcodes_stream << hex << 0x06 + 8 * opcode_helper(args[1][0]) << " " << hex
-                                       << stoi(token, nullptr, 16) << " ";
+                        try
+                        {
+                            opcodes_stream << hex << 0x06 + 8 * opcode_helper(args[1][0]) << " " << hex
+                                           << stoi(token, nullptr, 16) << " ";
+                        }
+                        catch (exception)
+                        {
+                            cerr << "Invalid value: " << token << "\n";
+                            return 1;
+                        }
+
                         break;
                     }
 
@@ -550,8 +559,17 @@ int main(int argc, char **argv)
                 }
                 else if (args[0] == "LDA")
                 {
-                    opcodes_stream << hex << 0x3a << " " << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
-                                   << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                    try
+                    {
+                        opcodes_stream << hex << 0x3a << " " << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
+                                       << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                    }
+                    catch (exception)
+                    {
+                        cerr << "Invalid value: " << token << "\n";
+                        return 1;
+                    }
+
                     break;
                 }
                 else if (args[0] == "LDAX")
@@ -572,9 +590,18 @@ int main(int argc, char **argv)
                 {
                     if (i == 2)
                     {
-                        opcodes_stream << hex << 0x01 + 8 * (opcode_helper(args[1][0]) - opcode_helper('B')) << " "
-                                       << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
-                                       << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                        try
+                        {
+                            opcodes_stream << hex << 0x01 + 8 * (opcode_helper(args[1][0]) - opcode_helper('B')) << " "
+                                           << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
+                                           << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                        }
+                        catch (exception)
+                        {
+                            cerr << "Invalid value: " << token << "\n";
+                            return 1;
+                        }
+
                         break;
                     }
 
@@ -593,14 +620,32 @@ int main(int argc, char **argv)
                 }
                 else if (args[0] == "LHLD")
                 {
-                    opcodes_stream << hex << 0x2a << " " << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
-                                   << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                    try
+                    {
+                        opcodes_stream << hex << 0x2a << " " << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
+                                       << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                    }
+                    catch (exception)
+                    {
+                        cerr << "Invalid value: " << token << "\n";
+                        return 1;
+                    }
+
                     break;
                 }
                 else if (args[0] == "STA")
                 {
-                    opcodes_stream << hex << 0x32 << " " << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
-                                   << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                    try
+                    {
+                        opcodes_stream << hex << 0x32 << " " << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
+                                       << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                    }
+                    catch (exception)
+                    {
+                        cerr << "Invalid value: " << token << "\n";
+                        return 1;
+                    }
+
                     break;
                 }
                 else if (args[0] == "STAX")
@@ -619,8 +664,17 @@ int main(int argc, char **argv)
                 }
                 else if (args[0] == "SHLD")
                 {
-                    opcodes_stream << hex << 0x22 << " " << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
-                                   << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                    try
+                    {
+                        opcodes_stream << hex << 0x22 << " " << hex << (stoi(token, nullptr, 16) & 0xff) << " " << hex
+                                       << (stoi(token, nullptr, 16) >> 8 & 0xff) << " ";
+                    }
+                    catch (exception)
+                    {
+                        cerr << "Invalid value: " << token << "\n";
+                        return 1;
+                    }
+
                     break;
                 }
                 else if (args[0] == "ADD")
@@ -655,12 +709,30 @@ int main(int argc, char **argv)
                 }
                 else if (args[0] == "ADI")
                 {
-                    opcodes_stream << hex << 0xc6 << " " << hex << stoi(token, nullptr, 16) << " ";
+                    try
+                    {
+                        opcodes_stream << hex << 0xc6 << " " << hex << stoi(token, nullptr, 16) << " ";
+                    }
+                    catch (exception)
+                    {
+                        cerr << "Invalid value: " << token << "\n";
+                        return 1;
+                    }
+
                     break;
                 }
                 else if (args[0] == "ACI")
                 {
-                    opcodes_stream << hex << 0xce << " " << hex << stoi(token, nullptr, 16) << " ";
+                    try
+                    {
+                        opcodes_stream << hex << 0xce << " " << hex << stoi(token, nullptr, 16) << " ";
+                    }
+                    catch (exception)
+                    {
+                        cerr << "Invalid value: " << token << "\n";
+                        return 1;
+                    }
+
                     break;
                 }
                 else if (args[0] == "DAD")
@@ -709,12 +781,30 @@ int main(int argc, char **argv)
                 }
                 else if (args[0] == "SUI")
                 {
-                    opcodes_stream << hex << 0xd6 << " " << hex << stoi(token, nullptr, 16) << " ";
+                    try
+                    {
+                        opcodes_stream << hex << 0xd6 << " " << hex << stoi(token, nullptr, 16) << " ";
+                    }
+                    catch (exception)
+                    {
+                        cerr << "Invalid value: " << token << "\n";
+                        return 1;
+                    }
+
                     break;
                 }
                 else if (args[0] == "SBI")
                 {
-                    opcodes_stream << hex << 0xde << " " << hex << stoi(token, nullptr, 16) << " ";
+                    try
+                    {
+                        opcodes_stream << hex << 0xde << " " << hex << stoi(token, nullptr, 16) << " ";
+                    }
+                    catch (exception)
+                    {
+                        cerr << "Invalid value: " << token << "\n";
+                        return 1;
+                    }
+
                     break;
                 }
                 else if (args[0] == "INR")
@@ -954,7 +1044,16 @@ int main(int argc, char **argv)
                 }
                 else if (args[0] == "CPI")
                 {
-                    opcodes_stream << hex << 0xfe << " " << hex << stoi(token, nullptr, 16) << " ";
+                    try
+                    {
+                        opcodes_stream << hex << 0xfe << " " << hex << stoi(token, nullptr, 16) << " ";
+                    }
+                    catch (exception)
+                    {
+                        cerr << "Invalid immediate value: " << token << "\n";
+                        return 1;
+                    }
+
                     break;
                 }
                 else if (args[0] == "ANA")
@@ -974,7 +1073,16 @@ int main(int argc, char **argv)
                 }
                 else if (args[0] == "ANI")
                 {
-                    opcodes_stream << hex << 0xe6 << " " << hex << stoi(token, nullptr, 16) << " ";
+                    try
+                    {
+                        opcodes_stream << hex << 0xe6 << " " << hex << stoi(token, nullptr, 16) << " ";
+                    }
+                    catch (exception)
+                    {
+                        cerr << "Invalid immediate value: " << token << "\n";
+                        return 1;
+                    }
+
                     break;
                 }
                 else if (args[0] == "XRA")
@@ -994,7 +1102,16 @@ int main(int argc, char **argv)
                 }
                 else if (args[0] == "XRI")
                 {
-                    opcodes_stream << hex << 0xee << " " << hex << stoi(token, nullptr, 16) << " ";
+                    try
+                    {
+                        opcodes_stream << hex << 0xee << " " << hex << stoi(token, nullptr, 16) << " ";
+                    }
+                    catch (exception)
+                    {
+                        cerr << "Invalid immediate value: " << token << "\n";
+                        return 1;
+                    }
+
                     break;
                 }
                 else if (args[0] == "ORA")
@@ -1014,7 +1131,16 @@ int main(int argc, char **argv)
                 }
                 else if (args[0] == "ORI")
                 {
-                    opcodes_stream << hex << 0xf6 << " " << hex << stoi(token, nullptr, 16) << " ";
+                    try
+                    {
+                        opcodes_stream << hex << 0xf6 << " " << hex << stoi(token, nullptr, 16) << " ";
+                    }
+                    catch (exception)
+                    {
+                        cerr << "Invalid immediate value: " << token << "\n";
+                        return 1;
+                    }
+
                     break;
                 }
             }
@@ -1155,16 +1281,7 @@ outer:
                 {
                     if (i == 2)
                     {
-                        try
-                        {
-                            r.set(get_reg_index(args[1][0]), stoi(token, nullptr, 16), mem);
-                        }
-                        catch (exception)
-                        {
-                            cerr << "Invalid value: " << token << "\n";
-                            return 1;
-                        }
-
+                        r.set(get_reg_index(args[1][0]), stoi(token, nullptr, 16), mem);
                         clock_cycles += args[1][0] != 'M' ? 7 : 10;
                         break;
                     }
@@ -1173,16 +1290,7 @@ outer:
                 }
                 else if (args[0] == "LDA")
                 {
-                    try
-                    {
-                        r.set(0, mem.get(stoi(token, nullptr, 16)));
-                    }
-                    catch (exception)
-                    {
-                        cerr << "Invalid address: " << token << "\n";
-                        return 1;
-                    }
-
+                    r.set(0, mem.get(stoi(token, nullptr, 16)));
                     clock_cycles += 13;
                     break;
                 }
@@ -1196,18 +1304,9 @@ outer:
                 {
                     if (i == 2)
                     {
-                        try
-                        {
-                            r.set(get_reg_index(args[1][0]), stoi(token, nullptr, 16) >> 8, mem);
-                            r.set(get_reg_index(args[1][0] == 'H' ? 'L' : args[1][0] + 1),
-                                  stoi(token, nullptr, 16) & 0xFF, mem);
-                        }
-                        catch (exception)
-                        {
-                            cerr << "Invalid value: " << token << "\n";
-                            return 1;
-                        }
-
+                        r.set(get_reg_index(args[1][0]), stoi(token, nullptr, 16) >> 8, mem);
+                        r.set(get_reg_index(args[1][0] == 'H' ? 'L' : args[1][0] + 1), stoi(token, nullptr, 16) & 0xFF,
+                              mem);
                         clock_cycles += 10;
                         break;
                     }
@@ -1216,32 +1315,15 @@ outer:
                 }
                 else if (args[0] == "LHLD")
                 {
-                    try
-                    {
-                        r.set(get_reg_index('L'), mem.get(stoi(token, nullptr, 16)), mem);
-                        r.set(get_reg_index('H'), mem.get(stoi(token, nullptr, 16) + 1), mem);
-                    }
-                    catch (exception)
-                    {
-                        cerr << "Invalid address: " << token << "\n";
-                        return 1;
-                    }
-
+                    r.set(get_reg_index('L'), mem.get(stoi(token, nullptr, 16)), mem);
+                    r.set(get_reg_index('H'), mem.get(stoi(token, nullptr, 16) + 1), mem);
                     clock_cycles += 16;
                     break;
                 }
                 else if (args[0] == "STA")
                 {
-                    try
-                    {
-                        mem.set(stoi(token, nullptr, 16), r.get(0));
-                        r.hl_update(mem);
-                    }
-                    catch (exception)
-                    {
-                        cerr << "Invalid address: " << token << "\n";
-                        return 1;
-                    }
+                    mem.set(stoi(token, nullptr, 16), r.get(0));
+                    r.hl_update(mem);
 
                     clock_cycles += 13;
                     break;
@@ -1255,19 +1337,11 @@ outer:
                 }
                 else if (args[0] == "SHLD")
                 {
-                    try
-                    {
-                        mem.set(stoi(token, nullptr, 16), r.get(get_reg_index('L')));
-                        r.hl_update(mem);
+                    mem.set(stoi(token, nullptr, 16), r.get(get_reg_index('L')));
+                    r.hl_update(mem);
 
-                        mem.set(stoi(token, nullptr, 16) + 1, r.get(get_reg_index('H')));
-                        r.hl_update(mem);
-                    }
-                    catch (exception)
-                    {
-                        cerr << "Invalid address: " << token << "\n";
-                        return 1;
-                    }
+                    mem.set(stoi(token, nullptr, 16) + 1, r.get(get_reg_index('H')));
+                    r.hl_update(mem);
 
                     clock_cycles += 16;
                     break;
@@ -1302,16 +1376,8 @@ outer:
                     uint16_t result;
                     uint8_t aux;
 
-                    try
-                    {
-                        result = r.get(0) + stoi(token, nullptr, 16);
-                        aux = (r.get(0) & 0x0F) + (stoi(token, nullptr, 16) & 0x0F);
-                    }
-                    catch (exception)
-                    {
-                        cerr << "Invalid value: " << token << "\n";
-                        return 1;
-                    }
+                    result = r.get(0) + stoi(token, nullptr, 16);
+                    aux = (r.get(0) & 0x0F) + (stoi(token, nullptr, 16) & 0x0F);
 
                     r.set(0, result);
                     f.scan(result, aux & 0x10);
@@ -1323,16 +1389,8 @@ outer:
                     uint16_t result;
                     uint8_t aux;
 
-                    try
-                    {
-                        result = r.get(0) + stoi(token, nullptr, 16) + f.carry;
-                        aux = (r.get(0) & 0x0F) + (stoi(token, nullptr, 16) & 0x0F) + f.carry;
-                    }
-                    catch (exception)
-                    {
-                        cerr << "Invalid value: " << token << "\n";
-                        return 1;
-                    }
+                    result = r.get(0) + stoi(token, nullptr, 16) + f.carry;
+                    aux = (r.get(0) & 0x0F) + (stoi(token, nullptr, 16) & 0x0F) + f.carry;
 
                     r.set(0, result);
                     f.scan(result, aux & 0x10);
@@ -1384,16 +1442,8 @@ outer:
                     uint16_t result;
                     uint8_t aux;
 
-                    try
-                    {
-                        result = r.get(0) - stoi(token, nullptr, 16);
-                        aux = (r.get(0) & 0x0F) + ((~stoi(token, nullptr, 16) + 1) & 0x0F);
-                    }
-                    catch (exception)
-                    {
-                        cerr << "Invalid value: " << token << "\n";
-                        return 1;
-                    }
+                    result = r.get(0) - stoi(token, nullptr, 16);
+                    aux = (r.get(0) & 0x0F) + ((~stoi(token, nullptr, 16) + 1) & 0x0F);
 
                     r.set(0, result);
                     f.scan(result, aux & 0x10);
@@ -1405,17 +1455,9 @@ outer:
                     uint16_t result;
                     uint8_t aux;
 
-                    try
-                    {
-                        result = r.get(0) - stoi(token, nullptr, 16) - f.carry;
-                        aux = (r.get(0) & 0x0F) + (~(stoi(token, nullptr, 16) + 1) & 0x0F) +
-                              ((~(uint8_t)f.carry + 1) & 0x0F);
-                    }
-                    catch (exception)
-                    {
-                        cerr << "Invalid value: " << token << "\n";
-                        return 1;
-                    }
+                    result = r.get(0) - stoi(token, nullptr, 16) - f.carry;
+                    aux =
+                        (r.get(0) & 0x0F) + (~(stoi(token, nullptr, 16) + 1) & 0x0F) + ((~(uint8_t)f.carry + 1) & 0x0F);
 
                     r.set(0, result);
                     f.scan(result, aux & 0x10);
@@ -1718,15 +1760,7 @@ outer:
                     uint8_t accumulator = r.get(0);
                     uint8_t operand;
 
-                    try
-                    {
-                        operand = stoi(token, nullptr, 16);
-                    }
-                    catch (exception)
-                    {
-                        cerr << "Invalid value: " << token << "\n";
-                        return 1;
-                    }
+                    operand = stoi(token, nullptr, 16);
 
                     f.carry = accumulator < operand;
                     f.zero = accumulator == operand;
@@ -1751,15 +1785,7 @@ outer:
                     uint8_t accumulator = r.get(0);
                     uint8_t operand;
 
-                    try
-                    {
-                        operand = stoi(token, nullptr, 16);
-                    }
-                    catch (exception)
-                    {
-                        cerr << "Invalid value: " << token << "\n";
-                        return 1;
-                    }
+                    operand = stoi(token, nullptr, 16);
 
                     uint8_t result = accumulator & operand;
 
@@ -1786,15 +1812,7 @@ outer:
                     uint8_t accumulator = r.get(0);
                     uint8_t operand;
 
-                    try
-                    {
-                        operand = stoi(token, nullptr, 16);
-                    }
-                    catch (exception)
-                    {
-                        cerr << "Invalid value: " << token << "\n";
-                        return 1;
-                    }
+                    operand = stoi(token, nullptr, 16);
 
                     uint8_t result = accumulator ^ operand;
 
@@ -1821,15 +1839,7 @@ outer:
                     uint8_t accumulator = r.get(0);
                     uint8_t operand;
 
-                    try
-                    {
-                        operand = stoi(token, nullptr, 16);
-                    }
-                    catch (exception)
-                    {
-                        cerr << "Invalid value: " << token << "\n";
-                        return 1;
-                    }
+                    operand = stoi(token, nullptr, 16);
 
                     uint8_t result = accumulator | operand;
 

@@ -1,7 +1,6 @@
 LDA F100h
 MVI H, 00h
 MOV B, A
-RRC
 MOV C, A
 LXI D, F200h
 

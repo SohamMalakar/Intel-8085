@@ -416,7 +416,7 @@ int main(int argc, char **argv)
 {
     if (argc < 2)
     {
-        cerr << "Usage: " << argv[0] << " <file> [optional: args]\n";
+        cerr << "Usage: " << argv[0] << " <file>\n";
         return 1;
     }
 

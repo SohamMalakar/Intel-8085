@@ -15,5 +15,8 @@ run: asm
 debug: asm
 	clear && gdb --args ./$^ samples/test.asm
 
+install: asm
+	sudo cp -f asm /usr/local/bin/ && make clean
+
 clean:
 	rm *.o asm

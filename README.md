@@ -4,33 +4,25 @@ It's an emulator of the Intel 8085 microprocessor written in C++.
 
 ## Build from Source
 
-Run the following command to build the project:
+To build the emulator from source, follow the instructions below.
 
 ### GNU/Linux
+
+Run the following commands to build the project:
 
 ```
 $ git clone https://github.com/SohamMalakar/Intel-8085.git
 $ cd Intel-8085
-$ make
+$ make install
 ```
 
-## Samples
+## Usage
 
-There are some programs in the [samples](https://github.com/SohamMalakar/Intel-8085/tree/master/samples) directory written in Assembly language. You can run them by executing the following command:
+After installing the emulator, you can run it by running the following command:
 
 ```
-$ ./asm samples/test.asm
+$ asm <file>
 ```
-
-## TODO
-
-I might add these features in the future:
-
-- [x] **next** and **prev** commands to navigate through the memory
-- [x] step by step execution
-- [x] breakpoints
-- [x] mnemonics to hexcode conversion
-- [x] **bytes**, **m cycles** and **t states** of each instruction
 
 ## License
 

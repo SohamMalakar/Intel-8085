@@ -2,6 +2,8 @@
 #include <iostream>
 #include <limits>
 #include <regex>
+#include <set>
+#include <unordered_map>
 
 using namespace std;
 
@@ -9,14 +11,17 @@ using namespace std;
 #define IS_REG(x) (regex_match(x, regex("[ABCDEHLMabcdehlm]{1}")))
 #define TOUPPER(x) transform(upr_token.begin(), upr_token.end(), upr_token.begin(), ::toupper);
 #define DEBUG                                                                                                          \
-    if (is_debug && regex_replace(lines[pc], regex(" "), "") != "")                                                    \
+    if ((is_debug && regex_replace(lines[pc], regex(" "), "") != "") ||                                                \
+        (stop_at_breakpoints && breakpoints.find(pc) != breakpoints.end()))                                            \
     {                                                                                                                  \
         cout << "Executed: " << lines[pc] << "\n";                                                                     \
         shell(f, r, mem);                                                                                              \
     }
 
 map<uint16_t, uint8_t> modified_memory;
-bool is_debug = false;
+set<size_t> breakpoints;
+bool is_debug;
+bool stop_at_breakpoints;
 uint16_t cur_addr = 0;
 string opcodes = "";
 
@@ -29,7 +34,7 @@ void print_memory()
         for (auto &m : modified_memory)
             cout << hex << m.first << ": " << hex << (int)m.second << ", ";
 
-        cout << "\b\b  \n";
+        cout << "\b\b \n";
     }
 }
 
@@ -258,6 +263,10 @@ void shell(flag_reg &f, reg &r, memory &mem)
             cout << "  getmem - get a memory address\n";
             cout << "  next / n - set the next memory address\n";
             cout << "  prev / p - set the previous memory address\n";
+            cout << "  break / b - set a breakpoint\n";
+            cout << "  clean - clean all breakpoints\n";
+            cout << "  !breakpoints - show all breakpoints\n";
+            cout << "  continue / c - continue to the next breakpoint\n";
             cout << "  step / s - execute one instruction\n";
             cout << "  exec - execute the program\n";
             cout << "  opcode - show the opcodes\n";
@@ -284,6 +293,49 @@ void shell(flag_reg &f, reg &r, memory &mem)
             r.print();
             print_memory();
         }
+        else if (cmd == "break" || cmd == "b")
+        {
+            int breakpoint;
+
+            cout << "Breakpoint: ";
+            cin >> dec >> breakpoint;
+
+            FLUSH
+
+            if (breakpoint < 1)
+            {
+                cerr << "Invalid breakpoint!\n";
+                continue;
+            }
+
+            breakpoints.insert(breakpoint - 1);
+        }
+        else if (cmd == "clean")
+        {
+            breakpoints.clear();
+            cout << "Breakpoints cleared!\n";
+        }
+        else if (cmd == "!breakpoints")
+        {
+            if (breakpoints.empty())
+            {
+                cout << "No breakpoints!\n";
+                continue;
+            }
+
+            cout << "Breakpoints:\n";
+
+            for (auto it : breakpoints)
+                cout << dec << it + 1 << ", ";
+
+            cout << "\b\b \n";
+        }
+        else if (cmd == "continue" || cmd == "c")
+        {
+            is_debug = false;
+            stop_at_breakpoints = true;
+            break;
+        }
         else if (cmd == "step" || cmd == "s")
         {
             is_debug = true;
@@ -291,13 +343,8 @@ void shell(flag_reg &f, reg &r, memory &mem)
         }
         else if (cmd == "exec")
         {
-            /* if (is_debug)
-            {
-                cout << "Already in debug mode!\n";
-                continue;
-            } */
-
             is_debug = false;
+            stop_at_breakpoints = false;
             break;
         }
         else if (cmd == "clear" || cmd == "cls")

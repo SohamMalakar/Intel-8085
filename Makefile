@@ -1,7 +1,7 @@
 
 CPP=g++
 
-CPPFLAGS=-Wall -Wno-catch-value -std=c++17 -Ofast # -g
+CPPFLAGS=-Wall -Wno-catch-value -Wno-unused-result -std=c++17 -Ofast # -g
 
 %.o: %.cpp
 	$(CPP) $(CPPFLAGS) -c $^

@@ -16,6 +16,16 @@ $ cd Intel-8085
 $ make install
 ```
 
+### Windows
+
+1. Download the files from [here](https://github.com/SohamMalakar/Intel-8085/archive/refs/heads/master.zip).
+
+2. Extract the files. (**_NOTE:_** You can extract the files using [7-Zip](https://www.7-zip.org/) or other alternatives)
+
+3. Run the `install.bat` script.
+
+> **_NOTE:_** Make sure you have the latest [g++](https://winlibs.com/) compiler installed in your system.
+
 ## Usage
 
 After installing the emulator, you can run it by running the following command:

@@ -1,0 +1,56 @@
+LDA F100
+MVI H, 00
+MOV B, A
+RRC
+MOV C, A
+LXI D, F200
+
+LOOP:
+    MOV A, B
+    CALL REM
+    DCR C
+    JNZ LOOP
+
+LDA F300
+MOV B, A
+MVI A, 00
+
+LOOP2:
+    ADD B
+    DCR B
+    JNZ LOOP2
+
+MOV B, A
+LDA F100
+
+MVI C, 01
+
+CMP B
+JZ PERFECT
+DCR C
+
+PERFECT: MOV A, C
+STA F400
+HLT
+
+REM:
+    MOV L, C
+
+    LOOP1:
+        CMP L
+        JC END
+        SUB L
+        JMP LOOP1
+
+    END: CPI 00
+    JNZ NO
+    MOV A, C
+    STAX D
+
+    INX D
+    INR H
+
+    MOV A, H
+    STA F300
+
+    NO: RET

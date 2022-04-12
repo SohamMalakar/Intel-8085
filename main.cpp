@@ -1796,6 +1796,10 @@ outer:
                     uint8_t accumulator = r.get(0);
                     uint8_t operand = r.get(get_reg_index(args[1][0]), mem);
 
+                    uint16_t result = accumulator - operand;
+                    uint8_t aux = (accumulator & 0x0F) + ((~operand + 1) & 0x0F);
+                    f.scan(result, aux & 0x10);
+
                     f.carry = accumulator < operand;
                     f.zero = accumulator == operand;
                     clock_cycles += args[1][0] != 'M' ? 4 : 7;
@@ -1804,9 +1808,11 @@ outer:
                 else if (args[0] == "CPI")
                 {
                     uint8_t accumulator = r.get(0);
-                    uint8_t operand;
+                    uint8_t operand = stoi(token, nullptr, 16);
 
-                    operand = stoi(token, nullptr, 16);
+                    uint16_t result = accumulator - operand;
+                    uint8_t aux = (accumulator & 0x0F) + ((~operand + 1) & 0x0F);
+                    f.scan(result, aux & 0x10);
 
                     f.carry = accumulator < operand;
                     f.zero = accumulator == operand;

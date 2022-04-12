@@ -6,4 +6,11 @@ ADD B
 DAA
 STA f300
 
+MVI A, 00
+
+JNC NCY // if CY == 0 then jump to NCY
+
+MVI A, 01
+
+NCY: STA f301
 HLT

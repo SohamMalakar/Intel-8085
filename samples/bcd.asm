@@ -1,4 +1,5 @@
 MVI C, 00 // adjust variable
+MVI D, 00 // carry flag
 
 // lower nibble
 
@@ -54,10 +55,23 @@ MOV B, A
 LDA f200
 
 ADD B
+
+JNC J5 // if CY == 0 then jump to J5
+
+MVI D, 01
+J5:
+
 ADD C // adjust the value
 
 STA f300
 
+MOV A, D
+
+CPI 01 // if A != 01 then jump to J6
+JNZ J6
+
+MVI A, 01
+J6: STA f301
 HLT
 
 RSHIFT:

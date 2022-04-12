@@ -180,8 +180,6 @@ class reg
 
 class flag_reg
 {
-    uint8_t value;
-
   public:
     bool sign;
     bool zero;
@@ -196,7 +194,6 @@ class flag_reg
 
     void reset()
     {
-        value = 0;
         sign = false;
         zero = false;
         aux_carry = false;
@@ -206,7 +203,7 @@ class flag_reg
 
     uint8_t get()
     {
-        return value;
+        return sign << 7 | zero << 6 | aux_carry << 4 | parity << 2 | carry;
     }
 
     void scan(uint16_t val, bool aux_carry, bool consider_carry = true)
@@ -227,13 +224,11 @@ class flag_reg
                 parity_count++;
 
         parity = !(parity_count % 2);
-
-        value = sign << 7 | zero << 6 | aux_carry << 4 | parity << 2 | carry;
     }
 
     void print()
     {
-        cout << "FLAG: " << hex << (int)value << "\n";
+        cout << "FLAG: " << hex << (int)get() << "\n";
         cout << "S: " << sign << ", Z: " << zero << ", AC: " << aux_carry << ", P: " << parity << ", CY: " << carry
              << "\n";
     }
@@ -1201,6 +1196,10 @@ int main(int argc, char **argv)
             {
                 opcodes_stream << hex << 0xeb << " ";
             }
+            else if (args[0] == "DAA")
+            {
+                opcodes_stream << hex << 0x27 << " ";
+            }
             else if (args[0] == "RET")
             {
                 opcodes_stream << hex << 0xc9 << " ";
@@ -1916,6 +1915,28 @@ outer:
                 r.set(get_reg_index('E'), r.get(get_reg_index('L')));
                 r.set(get_reg_index('L'), temp, mem);
 
+                clock_cycles += 4;
+            }
+            // arithmetic instructions
+            else if (args[0] == "DAA")
+            {
+                uint8_t accumulator = r.get(0);
+                uint8_t adjust = 0;
+
+                uint16_t result;
+                uint8_t aux;
+
+                if (f.aux_carry || (accumulator & 0x0F) > 9)
+                    adjust |= 0x06;
+
+                if (f.carry || (accumulator & 0xF0) > 0x90)
+                    adjust |= 0x60;
+
+                result = accumulator + adjust;
+                aux = (accumulator & 0x0F) + (adjust & 0x0F);
+
+                r.set(0, result);
+                f.scan(result, aux & 0x10);
                 clock_cycles += 4;
             }
             // branching instructions

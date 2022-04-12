@@ -1,0 +1,9 @@
+LDA f100
+MOV B, A
+LDA f200
+
+ADD B
+DAA
+STA f300
+
+HLT

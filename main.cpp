@@ -1932,6 +1932,8 @@ outer:
                 uint16_t result;
                 uint8_t aux;
 
+                bool tmp_carry = f.carry;
+
                 if (f.aux_carry || (accumulator & 0x0F) > 9)
                     adjust |= 0x06;
 
@@ -1943,6 +1945,9 @@ outer:
 
                 r.set(0, result);
                 f.scan(result, aux & 0x10);
+
+                f.carry = tmp_carry || (result > 0xFF);
+
                 clock_cycles += 4;
             }
             // branching instructions

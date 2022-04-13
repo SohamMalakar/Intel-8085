@@ -20,7 +20,7 @@ $ make install
 
 1. Download the files from [here](https://github.com/SohamMalakar/Intel-8085/archive/refs/heads/master.zip).
 
-2. Extract the files. (**_NOTE:_** You can extract the files using [7-Zip](https://www.7-zip.org/) or other alternatives)
+2. Extract the files. (You can use [7-Zip](https://www.7-zip.org/) to extract.)
 
 3. Run the `install.bat` script.
 

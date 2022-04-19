@@ -1,0 +1,36 @@
+
+MVI B, 00
+
+LDA f100
+
+RRC
+
+CC ODD
+CNC EVEN
+
+RLC
+RLC
+RLC
+RLC
+RLC
+
+CC ODD
+CNC EVEN
+
+JZ YES
+
+MVI B, ff
+YES: INR B
+
+MOV A, B
+STA f200
+
+HLT
+
+ODD:
+    INR B
+    RET
+
+EVEN:
+    DCR B
+    RET

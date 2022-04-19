@@ -1,0 +1,36 @@
+
+ORA A
+
+LHLD f100
+XCHG
+LHLD f200
+CALL XDAD
+
+SHLD f300
+
+LHLD f102
+XCHG
+LHLD f202
+CALL XDAD
+
+SHLD f302
+
+MVI A, 00
+
+JNC NCY
+INR A
+
+NCY: STA f304
+HLT
+
+XDAD: // HL += DE + carry
+    MOV A, L
+    ADC E
+
+    MOV L, A
+
+    MOV A, H
+    ADC D
+
+    MOV H, A    
+    RET

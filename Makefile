@@ -19,4 +19,4 @@ install: asm
 	sudo cp -f asm /usr/local/bin/ && make clean
 
 clean:
-	rm *.o asm
+	rm -f *.o asm

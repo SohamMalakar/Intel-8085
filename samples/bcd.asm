@@ -1,83 +1,75 @@
-MVI C, 00 // adjust variable
-MVI D, 00 // carry flag
+// clear all the registers before doing anything.
 
-// lower nibble
+lda f100
+ani 0f
+mov b, a
 
-LDA f100
-CALL RSHIFT
-MOV B, A
+lda f200
+ani 0f
 
-LDA f200
-CALL RSHIFT
+add b
+cpi 0a
 
-ADD B
+jc j1
+adi 06
 
-JNC J1 // if CY == 0 then jump to J1
+j1: mov c, a
 
-MVI C, 06
-JMP J2
+lda f100
+ani f0
+rrc
+rrc
+rrc
+rrc
+mov h, a
 
-J1: CPI A0 // if A < A0 then jump to J2
-JC J2
+lda f200
+ani f0
+rrc
+rrc
+rrc
+rrc
+mov l, a
 
-MVI C, 06
-J2:
+mov a, c
+rlc
+rlc
+rlc
+rlc
 
-// higher nibble
+mov a, h
+mov b, l
+adc b
 
-LDA f100
-ANI f0
-MOV B, A
+cpi 0a
 
-LDA f200
-ANI f0
+jc j2
+adi 06
 
-ADD B
+j2: mov d, a
 
-JNC J3 // if CY == 0 then jump to J3
+ani 0f
+rlc
+rlc
+rlc
+rlc
 
-MOV A, C
-ORI 60
-MOV C, A
-JMP J4
+mov h, a
 
-J3: CPI A0 // if A < A0 then jump to J4
-JC J4
+mov a, c
+ani 0f
 
-MOV A, C
-ORI 60
-MOV C, A
-J4:
+ora h
 
-LDA f100
-MOV B, A
+sta f301
 
-LDA f200
+mov a, d
+ani f0
+rlc
+rlc
+rlc
+rlc
 
-ADD B
+sta f300
 
-JNC J5 // if CY == 0 then jump to J5
-
-MVI D, 01
-J5:
-
-ADD C // adjust the value
-
-STA f300
-
-MOV A, D
-
-CPI 01 // if A != 01 then jump to J6
-JNZ J6
-
-MVI A, 01
-J6: STA f301
-HLT
-
-RSHIFT:
-    ANI 0f
-    RLC
-    RLC
-    RLC
-    RLC
-    RET
+// end of the program.

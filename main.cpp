@@ -1,9 +1,10 @@
 #include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <regex>
 #include <set>
-#include <iterator>
 #include <unordered_map>
 
 using namespace std;
@@ -33,7 +34,7 @@ void print_memory()
         cout << "Modified memory:\n";
 
         for (auto &m : modified_memory)
-            cout << hex << m.first << ": " << hex << (int)m.second << ", ";
+            cout << hex << m.first << ": " << hex << setw(2) << setfill('0') << (int)m.second << ", ";
 
         cout << "\b\b \n";
     }
@@ -173,7 +174,7 @@ class reg
         cout << "Registers:\n";
 
         for (int i = 0; i < 8; i++)
-            cout << get_reg_name(i) << ": " << hex << (int)value[i] << (i == 7 ? "" : ", ");
+            cout << get_reg_name(i) << ": " << hex << setw(2) << setfill('0') << (int)value[i] << (i == 7 ? "" : ", ");
 
         cout << "\n";
     }
